@@ -1,0 +1,15 @@
+{
+  "name": "EZUI",
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "EZUI": {
+        "$className": "Folder",
+        "$path": "src",
+        "Packages": {
+          "$path": "Packages"
+        }
+      }
+    }
+  }
+}
