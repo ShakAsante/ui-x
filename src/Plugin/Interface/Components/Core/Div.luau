@@ -1,8 +1,5 @@
-local ReplicatedStorage = game:GetService "ReplicatedStorage"
-local Fusion = require(ReplicatedStorage.Packages.Fusion)
-local OnEvent = Fusion.OnEvent
+local Fusion = require "../../../../Packages/Fusion"
 
-local Children = Fusion.Children
 local DefaultProps = require "../DefaultProps"
 
 local function Div(scope: Fusion.Scope<any>, props: { Native: { [any]: any } }?)

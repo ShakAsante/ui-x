@@ -3,6 +3,13 @@ local EnumList = "@self/Packages"
 local ClassData = require "@self/ClassData"
 local Object = require "../Object"
 
+--[=[
+	@class Converter
+
+	Serializes a Roblox `Instance` tree into a plain data table, then emits
+	that data as generated source code for a target UI framework (Fusion,
+	Roact, Vide, or native `Instance.new` calls).
+]=]
 local Converter = Object:extend()
 
 type AcceptedTypes = string | boolean | number | Color3 | UDim2 | UDim | Vector2 | Vector3
@@ -27,11 +34,21 @@ local Frameworks = EnumList.new("Frameworks", {
 	"Native",
 })
 
-function Converter:Init()
+--[=[
+	Sets the default target framework to Fusion and exposes the `Frameworks` enum.
+]=]
+function Converter:Init(): ()
 	self.framework = Frameworks.Fusion
 	self.frameworks = Frameworks
 end
 
+--[=[
+	Formats a single value as a Luau source-code literal.
+
+	@param value AcceptedTypes
+	@return string
+	@error "Unhandled type: <type>" -- thrown if `value`'s type has no formatter
+]=]
 function Converter:FormatValue(value: AcceptedTypes): string?
 	local type = typeof(value)
 
@@ -70,17 +87,35 @@ function Converter:FormatValue(value: AcceptedTypes): string?
 	error("Unhandled type: " .. type)
 end
 
-function Converter:Indent(level: number): ""
+--[=[
+	Returns `level` tab characters, used to indent generated source lines.
+
+	@param level number
+	@return string
+]=]
+function Converter:Indent(level: number): string
 	return string.rep("\t", level)
 end
 
-function Converter:Wrap(callback)
+--[=[
+	Binds `self` to `callback` so it can be invoked without an explicit method call.
+
+	@param callback (self: Converter, ...any) -> ...any
+	@return (...any) -> ...any
+]=]
+function Converter:Wrap(callback: (self: any, ...any) -> ...any): (...any) -> ...any
 	return function(...)
 		return callback(self, ...)
 	end
 end
 
-function Converter:Serialize(instance: Instance)
+--[=[
+	Reads the properties listed in `ClassData` off `instance` into a plain table.
+
+	@param instance Instance
+	@return { [string]: any }
+]=]
+function Converter:Serialize(instance: Instance): { [string]: any }
 	local props = self:GetPropsOfClass(instance.ClassName)
 
 	local tbl = {}
@@ -95,6 +130,12 @@ function Converter:Serialize(instance: Instance)
 	return tbl
 end
 
+--[=[
+	Recursively serializes `instance` and its descendants into a `SerializedObject` tree.
+
+	@param instance Instance
+	@return SerializedObject
+]=]
 function Converter:ConvertInstance(instance: Instance): SerializedObject
 	local serial = self:Serialize(instance)
 
@@ -108,8 +149,14 @@ function Converter:ConvertInstance(instance: Instance): SerializedObject
 	return serial
 end
 
-function Converter:MakeFusionComponent(data: SerializedObject)
-	local function Read(node, offset)
+--[=[
+	Generates Fusion component source code from a `SerializedObject` tree.
+
+	@param data SerializedObject
+	@return FusionComponent -- generated source text
+]=]
+function Converter:MakeFusionComponent(data: SerializedObject): FusionComponent
+	local function Read(node: SerializedObject, offset: number?): string
 		offset = offset or 1
 		local ignoredProps = { "ClassName", "className", "Children" }
 
@@ -152,8 +199,14 @@ function Converter:MakeFusionComponent(data: SerializedObject)
 	}, "\n")
 end
 
-function Converter:MakeNativeComponent(data: SerializedObject)
-	local function Read(node, offset)
+--[=[
+	Generates native `Instance.new` construction source code from a `SerializedObject` tree.
+
+	@param data SerializedObject
+	@return NativeComponent -- generated source text
+]=]
+function Converter:MakeNativeComponent(data: SerializedObject): NativeComponent
+	local function Read(node: SerializedObject, offset: number?): string
 		offset = offset or 1
 		local indent = self:Indent(offset)
 
@@ -191,12 +244,18 @@ function Converter:MakeNativeComponent(data: SerializedObject)
 	}, "\n")
 end
 
-function Converter:MakeVideComponent(data: SerializedObject)
-	local function Quote(str)
+--[=[
+	Generates Vide component source code from a `SerializedObject` tree.
+
+	@param data SerializedObject
+	@return VideComponent -- generated source text
+]=]
+function Converter:MakeVideComponent(data: SerializedObject): VideComponent
+	local function Quote(str: string): string
 		return string.format("%q", str)
 	end
 
-	local function Read(node, offset)
+	local function Read(node: SerializedObject, offset: number?): string
 		offset = offset or 1
 		local indent = self:Indent(offset)
 
@@ -237,12 +296,18 @@ function Converter:MakeVideComponent(data: SerializedObject)
 	}, "\n")
 end
 
-function Converter:MakeRoactComponent(data: SerializedObject)
-	local function Quote(str)
+--[=[
+	Generates Roact component source code from a `SerializedObject` tree.
+
+	@param data SerializedObject
+	@return RoactComponent -- generated source text
+]=]
+function Converter:MakeRoactComponent(data: SerializedObject): RoactComponent
+	local function Quote(str: string): string
 		return string.format("%q", str)
 	end
 
-	local function Read(node, offset)
+	local function Read(node: SerializedObject, offset: number?): string
 		offset = offset or 1
 		local indent = self:Indent(offset)
 
@@ -297,7 +362,13 @@ function Converter:MakeRoactComponent(data: SerializedObject)
 	}, "\n")
 end
 
-function Converter:MakeComponent(data: SerializedObject, framework: Framework)
+--[=[
+	Dispatches to the generator matching `framework` and returns its generated source.
+
+	@param data SerializedObject
+	@param framework Framework
+]=]
+function Converter:MakeComponent(data: SerializedObject, framework: Framework): ()
 	local refs = {
 		[Frameworks.Roact] = self.MakeRoactComponent,
 		[Frameworks.Fusion] = self.MakeFusionComponent,
@@ -308,7 +379,15 @@ function Converter:MakeComponent(data: SerializedObject, framework: Framework)
 	refs[framework](self, data)
 end
 
-function Converter:AssertFramework(enum: Framework?)
+--[=[
+	Asserts that `enum` is a supported framework and that its library is present
+	under `ReplicatedStorage`.
+
+	@param enum Framework?
+	@error "Unsupported framework" -- thrown if `enum` isn't Roact, Fusion, or Vide
+	@error "<name> library not found" -- thrown if the library can't be located
+]=]
+function Converter:AssertFramework(enum: Framework?): ()
 	local refs = {
 		[Frameworks.Roact] = "Roact",
 		[Frameworks.Fusion] = "Fusion",
@@ -320,10 +399,18 @@ function Converter:AssertFramework(enum: Framework?)
 	assert(path, refs[enum] .. " library not found")
 end
 
-function Converter:GetDefaultComponents()
+function Converter:GetDefaultComponents(): ()
 	-- self:AssertPackages()
 end
 
+--[=[
+	Searches upward from `parent` (defaulting to this script) for a descendant
+	named `libraryName`, checking each ancestor in turn.
+
+	@param libraryName string
+	@param parent Instance? -- defaults to this script
+	@return string? -- the full path of the found instance, if any
+]=]
 function Converter:GetPathOfLibrary(libraryName: string, parent: Instance?): string?
 	parent = parent or script
 
@@ -344,7 +431,13 @@ function Converter:GetPathOfLibrary(libraryName: string, parent: Instance?): str
 	return found and found:GetFullName() or nil
 end
 
-function Converter:GetPropsOfClass(className: string)
+--[=[
+	Looks up the serializable property list for `className` from `ClassData`.
+
+	@param className string
+	@return { [string]: boolean }
+]=]
+function Converter:GetPropsOfClass(className: string): { [string]: boolean }
 	return ClassData[className] and ClassData[className].props or {}
 end
 

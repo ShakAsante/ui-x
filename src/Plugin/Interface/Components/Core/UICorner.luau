@@ -1,12 +1,6 @@
-local ReplicatedStorage = game:GetService "ReplicatedStorage"
-local Fusion = require(ReplicatedStorage.Packages.Fusion)
-local OnEvent = Fusion.OnEvent
-
-local Children = Fusion.Children
+local Fusion = require "../../../../Packages/Fusion"
 
 return function(Scope: Fusion.Scope<any>, props: {})
-	local ButtonScale = Scope:Value(1)
-
 	local UICorner = Scope:New "UICorner" {
 		CornerRadius = props.CornerRadius,
 		BottomLeftRadius = props.BottomLeftRadius,

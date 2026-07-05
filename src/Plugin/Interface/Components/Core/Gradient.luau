@@ -1,5 +1,4 @@
-local ReplicatedStorage = game:GetService "ReplicatedStorage"
-local Fusion = require(ReplicatedStorage.Packages.Fusion)
+local Fusion = require "../../../../Packages/Fusion"
 
 type CurveName = "Linear" | "EaseIn" | "EaseOut" | "EaseInOut"
 type CurveFn = (t: number) -> number

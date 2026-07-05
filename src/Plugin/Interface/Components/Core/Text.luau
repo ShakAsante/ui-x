@@ -1,8 +1,4 @@
-local ReplicatedStorage = game:GetService "ReplicatedStorage"
-local Fusion = require(ReplicatedStorage.Packages.Fusion)
-local OnEvent = Fusion.OnEvent
-
-local Children = Fusion.Children
+local Fusion = require "../../../../Packages/Fusion"
 local DefaultProps = require "../DefaultProps"
 
 return function(Scope: Fusion.Scope<any>, Props: { Text: string, Font: Enum.Font, Native: { [any]: any } }?)

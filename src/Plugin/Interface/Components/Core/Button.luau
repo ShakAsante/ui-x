@@ -1,6 +1,4 @@
-local ReplicatedStorage = game:GetService "ReplicatedStorage"
-local SoundService = game:GetService "SoundService"
-local Fusion = require(ReplicatedStorage.Packages.Fusion)
+local Fusion = require "../../../../Packages/Fusion"
 local DefaultProps = require "../DefaultProps"
 
 local OnEvent = Fusion.OnEvent
@@ -19,7 +17,7 @@ local function Button(
 	local clickSound = scope:New "Sound" {
 		SoundId = "rbxassetid://139800881181209",
 		Volume = 0.5,
-		Parent = SoundService,
+		-- Parent = SoundService,
 	}
 
 	local merged = DefaultProps({
@@ -31,6 +29,7 @@ local function Button(
 			scope:New "UIScale" {
 				Scale = scope:Spring(scale, 20, 0.95),
 			},
+			clickSound,
 		},
 	}, props and props.native)
 

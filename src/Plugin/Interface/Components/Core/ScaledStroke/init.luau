@@ -1,5 +1,4 @@
-local ReplicatedStorage = game:GetService "ReplicatedStorage"
-local Fusion = require(ReplicatedStorage.Packages.Fusion)
+local Fusion = require "../../../../../Packages/Fusion"
 local Viewport = require "@self/Viewport"
 
 local REFERENCE_HEIGHT = 1080

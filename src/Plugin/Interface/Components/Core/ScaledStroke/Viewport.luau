@@ -1,6 +1,5 @@
-local ReplicatedStorage = game:GetService "ReplicatedStorage"
 local Workspace = game:GetService "Workspace"
-local Fusion = require(ReplicatedStorage.Packages.Fusion)
+local Fusion = require "../../../../../Packages/Fusion"
 
 local outerScope = Fusion.scoped(Fusion)
 
