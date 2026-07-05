@@ -1,9 +1,9 @@
 {
-  "name": "EZUI",
+  "name": "UI X",
   "tree": {
     "$className": "DataModel",
     "ServerScriptService": {
-      "EZUI": {
+      "ui_x": {
         "$className": "Folder",
         "$path": "src",
         "Packages": {
